@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deepfake Detection Result</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #e0e7ff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            text-align: center;
+            padding: 30px;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            max-width: 600px;
+            width: 100%;
+            transition: transform 0.3s ease;
+            position: relative;
+        }
+
+        .container:hover {
+            transform: translateY(-10px);
+        }
+
+        h1 {
+            color: #6366f1;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        p {
+            color: #555555;
+            font-size: 18px;
+            margin-top: 20px;
+        }
+
+        img {
+            margin-top: 20px;
+            max-width: 100%;
+            height: auto;
+        }
+
+        .button-container {
+            margin-top: 30px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .back-button, .report-button, .download-button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .back-button {
+            background-color: #4f46e5;
+            color: #ffffff;
+        }
+
+        .back-button:hover {
+            background-color: #4338ca;
+            transform: scale(1.05);
+        }
+
+        .report-button {
+            background-color: #dc2626;
+            color: #ffffff;
+        }
+
+        .report-button:hover {
+            background-color: #b91c1c;
+            transform: scale(1.05);
+        }
+
+        .download-button {
+            background-color: #4caf50;
+            color: #ffffff;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+
+        .download-button:hover {
+            background-color: #43a047;
+            transform: scale(1.05);
+        }
+
+        /* Report Card Styles */
+        .report-card {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #f0f4f8;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        .report-card.active {
+            display: block;
+        }
+
+        .report-card button {
+            margin-top: 15px;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        .cybercrime-button {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .cybercrime-button:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
+        }
+
+        .feedback-button {
+            background-color: #f59e0b;
+            color: white;
+        }
+
+        .feedback-button:hover {
+            background-color: #d97706;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Deepfake Detection Result</h1>
+
+        <!-- Download Button -->
+        <button class="download-button" onclick="downloadReport()">Download Report</button>
+
+        <!-- Result displayed in the same container -->
+        <div class="result-card">
+            <h2>Detection Outcome</h2>
+            <p>{{ result }}</p>
+        </div>
+
+        <!-- Display the Base64-encoded waveform and spectrogram images -->
+        <img src="{{ waveform_image }}" alt="Waveform Image">
+        <img src="{{ spectrogram_image }}" alt="Spectrogram Image">
+
+        <div class="button-container">
+            <button class="back-button" onclick="goBack()">Analyze Another File</button>
+            <button class="report-button" onclick="showReportOptions()">Report</button>
+        </div>
+
+        <!-- Report Card -->
+        <div class="report-card" id="reportCard">
+            <p>Choose your reporting option:</p>
+            <button class="cybercrime-button" onclick="reportToCybercrime()">Report to Cybercrime Portal</button>
+            <button class="feedback-button" onclick="giveFeedback()">Wrong Results (Feedback)</button>
+        </div>
+    </div>
+
+    <script>
+        function goBack() {
+            window.location.href = "/";
+        }
+
+        function showReportOptions() {
+            document.getElementById("reportCard").classList.toggle("active");
+        }
+
+        function reportToCybercrime() {
+            window.open("https://cybercrime.gov.in/Webform/Index.aspx", "_blank");
+        }
+
+        function giveFeedback() {
+            alert("Thank you for the feedback.");
+        }
+
+        function downloadReport() {
+            const element = document.createElement('a');
+            const htmlContent = document.documentElement.outerHTML;
+            const file = new Blob([htmlContent], { type: 'text/html' });
+            element.href = URL.createObjectURL(file);
+            element.download = "DeepfakeDetectionResult.html";
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+        }
+    </script>
+</body>
+</html>

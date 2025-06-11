@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Fake Video Detector</title>
+    <style>
+        /* Existing styles */
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f0f0;
+            margin: 0;
+            padding: 0;
+        }
+
+        .wrapper {
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            padding: 40px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            margin: 20px auto;
+            position: relative; /* For positioning the Download Report button */
+        }
+
+        h1 {
+            color: #4f46e5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            letter-spacing: -.5px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .upload-container {
+            background-color: #fff;
+            border-radius: 6px;
+            padding: 10px;
+        }
+
+        .border-container {
+            border: 3px dashed rgba(198, 198, 198, 0.65);
+            padding: 40px;
+            cursor: pointer;
+            transition: border-color 0.3s ease-in-out;
+        }
+
+        .border-container:hover {
+            border-color: #4f46e5;
+        }
+
+        .border-container p {
+            color: #4f46e5;
+            font-weight: 600;
+            font-size: 1.1em;
+            letter-spacing: -1px;
+            margin-top: 30px;
+            margin-bottom: 0;
+            opacity: 0.75;
+        }
+
+        #file-browser {
+            text-decoration: none;
+            color: #4f46e5;
+            border-bottom: 3px dotted rgba(22, 22, 255, 0.85);
+            animation: pulse 2s infinite;
+        }
+
+        #file-browser:hover {
+            color: #4338ca;
+            border-bottom: 3px dotted #4338ca;
+        }
+
+        button {
+            background-color: #4f46e5;
+            color: #fff;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 6px;
+            transition: transform 0.2s ease-in-out, background-color 0.3s ease-in-out;
+            margin-top: 20px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #4338ca;
+            transform: scale(1.05);
+        }
+
+        button:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.3);
+        }
+
+        #result {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            max-height: 400px; /* Set a maximum height */
+            overflow-y: auto;  /* Enable vertical scrolling */
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 6px;
+            position: relative; /* For positioning the Download Report button */
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(22, 42, 255, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(22, 42, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(22, 42, 255, 0); }
+        }
+
+        p.error {
+            color: red;
+        }
+
+        #drop-area {
+            cursor: pointer;
+        }
+
+        #url-input {
+            width: 80%;
+            padding: 10px;
+            margin-top: 10px;
+        }
+
+        /* Styles for the results table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f4f4f4;
+            color: #333;
+            position: sticky; /* Make header sticky */
+            top: 0;
+            z-index: 1; /* Ensure header stays above the rows */
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: center;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        /* Responsive styling */
+        @media (max-width: 600px) {
+            .wrapper {
+                padding: 20px;
+            }
+
+            #url-input {
+                width: 100%;
+            }
+
+            button {
+                width: 100%;
+                padding: 12px;
+            }
+
+            table, th, td {
+                font-size: 14px;
+            }
+        }
+
+        /* Styles for the Download Report button */
+        #download-report {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #10b981;
+            padding: 8px 16px;
+        }
+
+        #download-report:hover {
+            background-color: #0d9467;
+        }
+
+        /* Styles for the Report button */
+        #report-button {
+            background-color: #ef4444;
+            margin-top: 10px;
+        }
+
+        #report-button:hover {
+            background-color: #dc2626;
+        }
+
+        /* Styles for the modal */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 100; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0, 0, 0, 0.5); /* Black w/ opacity */
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto; /* 15% from the top and centered */
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 400px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .modal-content button {
+            width: 100%;
+            margin: 10px 0;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            margin-top: -10px;
+            margin-right: -10px;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* Additional styles for overall prediction */
+        #overall-result {
+            margin-top: 20px;
+            font-size: 22px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        #overall-result span {
+            color: #4f46e5;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <h1>Fake Video Detector</h1>
+        <div class="upload-container">
+            <div id="drop-area" class="border-container">
+                <p>Drag and drop files here, or <a href="#" id="file-browser">browse</a> your computer.</p>
+                <form id="uploadForm" enctype="multipart/form-data">
+                    <input type="file" name="video" id="file-input" accept=".mp4,.avi,.mov,.mkv,.3gp" hidden>
+                    <p>Or enter a video URL:</p>
+                    <input type="url" name="video_url" id="url-input" placeholder="Enter video URL (YouTube, Twitter, Facebook)">
+                    <button type="submit">Upload and Detect</button>
+                </form>
+            </div>
+        </div>
+        <!-- Overall Prediction -->
+        <div id="overall-result" style="display: none;"></div>
+        <div id="result"></div>
+        <!-- Download Report Button -->
+        <button id="download-report" style="display: none;">Download Report</button>
+        <!-- Report Button -->
+        <button id="report-button" style="display: none;">Report</button>
+    </div>
+
+    <!-- Modal -->
+    <div id="report-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Report Options</h2>
+            <button id="report-cybercrime">Report to Cybercrime Portal</button>
+            <button id="report-wrong-result">Wrong Results</button>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('uploadForm');
+        const fileInput = document.getElementById('file-input');
+        const urlInput = document.getElementById('url-input');
+        const resultDiv = document.getElementById('result');
+        const fileBrowser = document.getElementById('file-browser');
+        const dropArea = document.getElementById('drop-area');
+
+        const downloadReportBtn = document.getElementById('download-report');
+        const reportButton = document.getElementById('report-button');
+
+        const modal = document.getElementById('report-modal');
+        const modalClose = document.querySelector('.close');
+        const reportCybercrimeBtn = document.getElementById('report-cybercrime');
+        const reportWrongResultBtn = document.getElementById('report-wrong-result');
+
+        let analysisResultsHtml = ''; // To store the HTML of the analysis results
+
+        // Open file browser when clicking link
+        fileBrowser.addEventListener('click', (event) => {
+            event.preventDefault();
+            fileInput.click();
+        });
+
+        // Handle drag and drop
+        dropArea.addEventListener('dragover', (event) => {
+            event.preventDefault();
+        });
+
+        dropArea.addEventListener('drop', (event) => {
+            event.preventDefault();
+            const files = event.dataTransfer.files;
+            if (files.length) {
+                fileInput.files = files;
+            }
+        });
+
+        // Highlight drop area on drag over
+        dropArea.addEventListener('dragenter', () => {
+            dropArea.classList.add('highlight');
+        });
+
+        dropArea.addEventListener('dragleave', () => {
+            dropArea.classList.remove('highlight');
+        });
+
+        // Handle form submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+
+            // Check if at least one of file or URL is provided
+            if (!fileInput.files.length && !urlInput.value) {
+                resultDiv.innerHTML = '<p class="error">Please upload a video file or enter a video URL.</p>';
+                return;
+            }
+
+            resultDiv.textContent = 'Processing... Please wait.';
+            // Hide buttons and overall result while processing
+            downloadReportBtn.style.display = 'none';
+            reportButton.style.display = 'none';
+            document.getElementById('overall-result').style.display = 'none';
+
+            const response = await fetch('/Detect', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // Display overall prediction
+                const overallResultDiv = document.getElementById('overall-result');
+                overallResultDiv.style.display = 'block';
+                overallResultDiv.innerHTML = `Overall Prediction: <span>${data.overall_output}</span>`;
+
+                // Prepare results table
+                let resultsHtml = '<table>';
+                resultsHtml += '<tr><th>Frame</th><th>Prediction</th><th>Confidence</th></tr>';
+                data.frame_results.forEach(result => {
+                    resultsHtml += `<tr>
+                        <td>${result.frame}</td>
+                        <td>${result.output}</td>
+                        <td>${result.confidence.toFixed(2)}%</td>
+                    </tr>`;
+                });
+                resultsHtml += '</table>';
+                resultDiv.innerHTML = resultsHtml;
+
+                // Include overall prediction in the report
+                analysisResultsHtml = `
+                    <h2>Overall Prediction: ${data.overall_output}</h2>
+                    <p>Average Confidence: ${data.average_confidence.toFixed(2)}%</p>
+                    ${resultsHtml}
+                `;
+
+                // Show buttons after processing
+                downloadReportBtn.style.display = 'inline-block';
+                reportButton.style.display = 'inline-block';
+            } else {
+                resultDiv.innerHTML = `<p class="error">An error occurred: ${data.error}</p>`;
+            }
+        });
+
+        // Handle Download Report button click
+        downloadReportBtn.addEventListener('click', () => {
+            // Prepare the HTML content
+            const htmlContent = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Analysis Report</title>
+                    <style>
+                        body {
+                            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                            margin: 20px;
+                        }
+                        h2 {
+                            color: #4f46e5;
+                        }
+                        p {
+                            font-size: 18px;
+                        }
+                        table {
+                            width: 100%;
+                            border-collapse: collapse;
+                        }
+                        table, th, td {
+                            border: 1px solid #ddd;
+                        }
+                        th, td {
+                            padding: 8px;
+                            text-align: center;
+                        }
+                        tr:nth-child(even) {
+                            background-color: #f9f9f9;
+                        }
+                        th {
+                            background-color: #f4f4f4;
+                            color: #333;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <h2>Analysis Report</h2>
+                    ${analysisResultsHtml}
+                </body>
+                </html>
+            `;
+
+            // Create a Blob from the HTML string
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+
+            // Create a temporary link element and trigger the download
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'analysis_report.html';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        });
+
+        // Handle Report button click
+        reportButton.addEventListener('click', () => {
+            modal.style.display = 'block';
+        });
+
+        // Handle modal close button click
+        modalClose.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+
+        // Handle clicking outside the modal content to close
+        window.addEventListener('click', (event) => {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+
+        // Handle Report to Cybercrime Portal button click
+        reportCybercrimeBtn.addEventListener('click', () => {
+            window.open('https://cybercrime.gov.in/Webform/Index.aspx', '_blank');
+        });
+
+        // Handle Wrong Results button click
+        reportWrongResultBtn.addEventListener('click', () => {
+            alert('Thank you for the feedback.');
+            modal.style.display = 'none';
+        });
+    </script>
+</body>
+</html>

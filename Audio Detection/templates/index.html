@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deepfake Detection</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #e0e7ff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            position: relative; /* Needed for absolute positioning of animation */
+        }
+
+        .wrapper {
+            margin: auto;
+            max-width: 900px;
+            padding-top: 60px;
+            text-align: center;
+            animation: fadeIn 0.8s ease-out both;
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        h1 {
+            color: #4f46e5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            letter-spacing: -.5px;
+            font-weight: 700;
+            padding-bottom: 10px;
+        }
+
+        .upload-container {
+            background-color: #fff;
+            border-radius: 6px;
+            padding: 10px;
+        }
+
+        .border-container {
+            border: 3px dashed rgba(198, 198, 198, 0.65);
+            padding: 40px;
+            cursor: pointer;
+            transition: border-color 0.3s ease-in-out;
+        }
+
+        .border-container:hover {
+            border-color: #4f46e5;
+        }
+
+        .border-container p {
+            color: #4f46e5;
+            font-weight: 600;
+            font-size: 1.1em;
+            letter-spacing: -1px;
+            margin-top: 30px;
+            margin-bottom: 0;
+            opacity: 0.75;
+        }
+
+        #file-browser {
+            text-decoration: none;
+            color: #4f46e5;
+            border-bottom: 3px dotted rgba(22, 22, 255, 0.85);
+            animation: pulse 2s infinite;
+        }
+
+        #file-browser:hover {
+            color: #4338ca;
+            border-bottom: 3px dotted #4338ca;
+        }
+
+        .icons {
+            color: #95afc0;
+            opacity: 0.55;
+        }
+
+        .icons i {
+            margin: 0 15px;
+        }
+
+        #file-name {
+            margin-top: 10px;
+            font-weight: 600;
+            color: #130f40;
+        }
+
+        /* Lottie animation container */
+        .lottie-container {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        /* Animation styles */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(22, 42, 255, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(22, 42, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(22, 42, 255, 0); }
+        }
+
+        button.btn-primary {
+            background-color: #4f46e5;
+            border: none;
+            color: #ffffff;
+            padding: 12px 25px;
+            border-radius: 6px;
+            transition: transform 0.2s ease-in-out, background-color 0.3s ease-in-out;
+        }
+
+        button.btn-primary:hover {
+            background-color: #4338ca;
+            transform: scale(1.05);
+        }
+
+        button.btn-primary:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="container">
+            <h1>Upload an Audio File</h1>
+            <div class="upload-container">
+                <div id="drop-area" class="border-container">
+                    <div class="icons fa-4x">
+                        <i class="fas fa-file-audio"></i>
+                    </div>
+                    <form action="/" method="post" enctype="multipart/form-data" id="upload-form">
+                        <input type="file" name="audio_file" id="file-input" accept=".wav" hidden>
+                        <p>Drag and drop files here, or <a href="#" id="file-browser">browse</a> your computer.</p>
+                    </form>
+                </div>
+            </div>
+            <button type="submit" form="upload-form" class="btn btn-primary mt-3">Analyze</button>
+            <p id="file-name"></p>
+            {% if message %}
+            <p class="message">{{ message }}</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Lottie animation container positioned on the left -->
+    <div class="lottie-container">
+        <dotlottie-player src="https://lottie.host/7d69a2da-71f6-4ab4-8175-eae8edb56389/Fm9Tw1eLBR.json" background="transparent" speed="1" style="width: 300px; height: 300px;" loop autoplay></dotlottie-player>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/@dotlottie/player-component@latest/dist/dotlottie-player.mjs" type="module"></script>
+
+    <script>
+        const dropArea = document.getElementById('drop-area');
+        const fileInput = document.getElementById('file-input');
+        const fileNameDisplay = document.getElementById('file-name');
+        const fileBrowser = document.getElementById('file-browser');
+
+        // Handle drag and drop
+        dropArea.addEventListener('dragover', (event) => {
+            event.preventDefault();
+            dropArea.classList.add('dragging');
+        });
+
+        dropArea.addEventListener('dragleave', () => {
+            dropArea.classList.remove('dragging');
+        });
+
+        dropArea.addEventListener('drop', (event) => {
+            event.preventDefault();
+            dropArea.classList.remove('dragging');
+            const files = event.dataTransfer.files;
+            if (files.length) {
+                fileInput.files = files;
+                fileNameDisplay.textContent = files[0].name;
+            }
+        });
+
+        // Open file browser when clicking link
+        fileBrowser.addEventListener('click', (event) => {
+            event.preventDefault();
+            fileInput.click();
+        });
+
+        // Display file name after selection
+        fileInput.addEventListener('change', () => {
+            const file = fileInput.files[0];
+            fileNameDisplay.textContent = file ? file.name : '';
+        });
+    </script>
+</body>
+</html>

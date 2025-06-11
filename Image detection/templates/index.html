@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Unveil AI - Deepfake Detection</title>
+    <!-- Bootstrap CSS from CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #e0e7ff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            position: relative;
+        }
+
+        .wrapper {
+            margin: auto;
+            max-width: 900px;
+            padding-top: 60px;
+            text-align: center;
+            animation: fadeIn 0.8s ease-out both;
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        h1 {
+            color: #4f46e5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            letter-spacing: -.5px;
+            font-weight: 700;
+            padding-bottom: 10px;
+        }
+
+        .upload-container {
+            background-color: #fff;
+            border-radius: 6px;
+            padding: 10px;
+        }
+
+        .border-container {
+            border: 3px dashed rgba(198, 198, 198, 0.65);
+            padding: 40px;
+            cursor: pointer;
+            transition: border-color 0.3s ease-in-out;
+        }
+
+        .border-container:hover {
+            border-color: #4f46e5;
+        }
+
+        .border-container p {
+            color: #4f46e5;
+            font-weight: 600;
+            font-size: 1.1em;
+            letter-spacing: -1px;
+            margin-top: 30px;
+            margin-bottom: 0;
+            opacity: 0.75;
+        }
+
+        #file-browser {
+            text-decoration: none;
+            color: #4f46e5;
+            border-bottom: 3px dotted rgba(22, 22, 255, 0.85);
+            animation: pulse 2s infinite;
+        }
+
+        #file-browser:hover {
+            color: #4338ca;
+            border-bottom: 3px dotted #4338ca;
+        }
+
+        .icons {
+            color: #95afc0;
+            opacity: 0.55;
+        }
+
+        .icons i {
+            margin: 0 15px;
+        }
+
+        #file-name {
+            margin-top: 10px;
+            font-weight: 600;
+            color: #130f40;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(22, 42, 255, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(22, 42, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(22, 42, 255, 0); }
+        }
+
+        button.btn-primary {
+            background-color: #4f46e5;
+            border: none;
+            color: #ffffff;
+            padding: 12px 25px;
+            border-radius: 6px;
+            transition: transform 0.2s ease-in-out, background-color 0.3s ease-in-out;
+        }
+
+        button.btn-primary:hover {
+            background-color: #4338ca;
+            transform: scale(1.05);
+        }
+
+        button.btn-primary:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.3);
+        }
+
+        .img-fluid {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .table-responsive {
+            margin-top: 20px;
+        }
+
+        .alert {
+            margin-top: 20px;
+        }
+
+        .download-report-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper position-relative">
+        <div class="container">
+            <h1 class="text-center">Unveil AI - Deepfake Detection</h1>
+            <div class="upload-container">
+                <div id="drop-area" class="border-container">
+                    <div class="icons fa-4x">
+                        <i class="fas fa-file-upload"></i>
+                    </div>
+                    <form method="POST" enctype="multipart/form-data" id="upload-form">
+                        <input type="file" name="file" id="file-input" class="form-control-file" hidden>
+                        <p>Drag and drop an image here, or <a href="#" id="file-browser">browse</a> your computer.</p>
+                    </form>
+                </div>
+                <button type="submit" form="upload-form" class="btn btn-primary mt-3">Upload</button>
+                <p id="file-name" class="mt-2"></p>
+            </div>
+
+            {% with messages = get_flashed_messages() %}
+              {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-info mt-3">
+                  {{ message }}
+                </div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+
+            {% if error %}
+            <div class="alert alert-danger" role="alert">
+                {{ error }}
+            </div>
+            {% endif %}
+
+            {% if result %}
+            <button type="submit" form="download-form" class="btn btn-secondary download-report-btn">Download Report</button>
+            <div class="alert alert-info mt-5" role="alert">
+                <p><strong>Result:</strong> {{ result }}</p>
+                <p><strong>Confidence Score:</strong> {{ confidence | round(2) }}%</p>
+            </div>
+
+            {% if exif_data %}
+            <div class="table-responsive">
+                <h5>Image Metadata (EXIF Data):</h5>
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>Tag</th>
+                            <th>Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for tag, value in exif_data.items() %}
+                        <tr>
+                            <td>{{ tag }}</td>
+                            <td>{{ value }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+
+            <!-- Report Button -->
+            <div class="mt-4">
+                <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#reportModal">
+                    Report
+                </button>
+            </div>
+
+            <!-- Report Modal -->
+            <div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="reportModalLabel">Report Options</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">
+                    <div class="d-grid gap-2">
+                      <form method="POST" action="{{ url_for('report') }}">
+                        <input type="hidden" name="action" value="report_cybercrime">
+                        <button type="submit" class="btn btn-danger">Report to Cybercrime Portal</button>
+                      </form>
+                      <form method="POST" action="{{ url_for('report') }}">
+                        <input type="hidden" name="action" value="wrong_results">
+                        <button type="submit" class="btn btn-secondary">Wrong Results</button>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Download Report Form -->
+            <form method="POST" action="{{ url_for('download_report') }}" id="download-form">
+                <input type="hidden" name="report_data" value='{{ report_data | tojson | safe }}'>
+            </form>
+
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Bootstrap JS and dependencies (Place at the end of body) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Custom JavaScript -->
+    <script>
+        const dropArea = document.getElementById('drop-area');
+        const fileInput = document.getElementById('file-input');
+        const fileNameDisplay = document.getElementById('file-name');
+        const fileBrowser = document.getElementById('file-browser');
+
+        // Handle drag and drop
+        dropArea.addEventListener('dragover', (event) => {
+            event.preventDefault();
+            dropArea.classList.add('dragging');
+        });
+
+        dropArea.addEventListener('dragleave', () => {
+            dropArea.classList.remove('dragging');
+        });
+
+        dropArea.addEventListener('drop', (event) => {
+            event.preventDefault();
+            dropArea.classList.remove('dragging');
+            const files = event.dataTransfer.files;
+            if (files.length) {
+                fileInput.files = files;
+                fileNameDisplay.textContent = 'Selected file: ' + files[0].name;
+            }
+        });
+
+        // Open file browser when clicking link
+        fileBrowser.addEventListener('click', (event) => {
+            event.preventDefault();
+            fileInput.click();
+        });
+
+        // Display file name after selection
+        fileInput.addEventListener('change', () => {
+            const file = fileInput.files[0];
+            fileNameDisplay.textContent = file ? 'Selected file: ' + file.name : '';
+        });
+    </script>
+</body>
+</html>
