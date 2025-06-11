@@ -1,4 +1,4 @@
-# Unveil AI - The Deepfake Slayer
+# Unveiling AI - The Deepfake Slayer
 
 ## 🚀 Overview
 
